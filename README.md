@@ -1,7 +1,11 @@
 # brand-scrapping
-Web scrapping from Korean Brand website
+Web scrapping from Korean Brand website - http://kdtj.kipris.or.kr/kdtj/searchLogina.do?method=loginTM#page10
 
-### How to use
+### Stacks we use
+
+`node.js` and [puppeteer](https://github.com/GoogleChrome/puppeteer)
+
+### Usage
 
 * Clone repository from git
 * `npm install` to install dependencies
