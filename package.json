@@ -1,0 +1,26 @@
+{
+  "name": "brand-scrapping",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/webcat12345/brand-scrapping.git"
+  },
+  "keywords": [
+    "scrapping"
+  ],
+  "author": "webcat12345",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/webcat12345/brand-scrapping/issues"
+  },
+  "homepage": "https://github.com/webcat12345/brand-scrapping#readme",
+  "dependencies": {
+    "puppeteer": "^1.12.0"
+  }
+}
