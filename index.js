@@ -41,9 +41,14 @@ async function getTotalPageCount(page) {
 
 async function nextPage(page, currentPageNumber) {
     try {
+        await page.waitForSelector('.board_pager03 strong', {visible: true});
         await page.evaluate(() => {
             const current = document.querySelector('.board_pager03 strong').textContent;
-            document.querySelectorAll('.board_pager03 a')[current].click();
+            if (current % 10 === 0) {
+                document.querySelector('.board_pager03 .next').click();
+            } else {
+                document.querySelectorAll('.board_pager03 a')[current].click();
+            }
         });
         console.log(`Go to next page - ${currentPageNumber + 1}`);
         await page.waitForResponse(SEARCH_API_URL);
@@ -72,7 +77,7 @@ async function run() {
     await startSearch(page);
     const totalPage = await getTotalPageCount(page);
     await savePageToPDF(page, 1);
-    for (let i = 1; i < 12; i ++) {
+    for (let i = 1; i < totalPage; i ++) {
         await nextPage(page, i);
         await savePageToPDF(page, i + 1);
     }
