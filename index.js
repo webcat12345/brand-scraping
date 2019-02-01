@@ -41,16 +41,21 @@ async function getTotalPageCount(page) {
 
 async function nextPage(page, currentPageNumber) {
     try {
+        console.log('Next page...');
         await page.waitForSelector('.board_pager03 strong', {visible: true});
         await page.evaluate(() => {
             const current = document.querySelector('.board_pager03 strong').textContent;
+            // if (current < 9) {
+            //     current = 9;
+            // }
             if (current % 10 === 0) {
                 document.querySelector('.board_pager03 .next').click();
             } else {
-                document.querySelectorAll('.board_pager03 a')[current].click();
+                console.log(current % 10);
+                document.querySelectorAll('.board_pager03 a')[current % 10].click();
             }
         });
-        console.log(`Go to next page - ${currentPageNumber + 1}`);
+        console.log(`Current selected page - ${currentPageNumber + 1}`);
         await page.waitForResponse(SEARCH_API_URL);
         await page.waitFor(10000);
     } catch (e) {
