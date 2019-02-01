@@ -11,7 +11,7 @@ async function startSearch(page) {
         await page.keyboard.type(String.fromCharCode(13));
         console.log('Search started...');
         await page.waitForResponse(SEARCH_API_URL);
-        await page.waitFor(6000);
+        await page.waitFor(10000);
         // await page.waitForNavigation();
         console.log('Search finished... checking page');
     } catch (e) {
@@ -41,31 +41,41 @@ async function getTotalPageCount(page) {
 
 async function nextPage(page, currentPageNumber) {
     try {
-        await page.evaluate( () => {
-            Array.from(document.querySelectorAll( '.board_pager03 a' ))
-                .filter( element => element.textContent === `${currentPageNumber + 1}` )[0].click();
+        await page.evaluate(() => {
+            const current = document.querySelector('.board_pager03 strong').textContent;
+            document.querySelectorAll('.board_pager03 a')[current].click();
         });
-        console.log('Go to next page, Page Number - ', currentPageNumber + 1);
+        console.log(`Go to next page - ${currentPageNumber + 1}`);
         await page.waitForResponse(SEARCH_API_URL);
-        await page.waitFor(6000);
+        await page.waitFor(10000);
     } catch (e) {
         console.log('ERROR: Clicking next page is failed. Error Detail - ', e);
     }
 }
 
+async function savePageToPDF(page, currentPageNumber) {
+    try {
+        await page.pdf({path: `brands/${currentPageNumber}.pdf`, format: 'A4'});
+        console.log(`Page ${currentPageNumber} is saved as ${currentPageNumber}.PDF`);
+    } catch (e) {
+        console.log('ERROR: Saving page failed. Error Detail - ', e);
+    }
+}
+
 async function run() {
     // start browser
-    const browser = await puppeteer.launch({headless: false, args: ['--start-fullscreen', '--window-size=1920,1040']});
+    const browser = await puppeteer.launch({headless: true, args: ['--start-fullscreen', '--window-size=1920,1040']});
     const page = await browser.newPage();
     await page.setViewport({width: 1300, height: 800});
     await page.goto(SITE_URL);
 
     await startSearch(page);
     const totalPage = await getTotalPageCount(page);
-    await nextPage(page, 1);
-
-
-    // await page.pdf({path: 'brands/1.pdf', format: 'A4'});
+    await savePageToPDF(page, 1);
+    for (let i = 1; i < 12; i ++) {
+        await nextPage(page, i);
+        await savePageToPDF(page, i + 1);
+    }
     browser.close();
 }
 
