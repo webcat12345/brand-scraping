@@ -1,4 +1,4 @@
-# brand-scrapping
+# brand-scraping
 Web scrapping from Korean Brand website - http://kdtj.kipris.or.kr/kdtj/searchLogina.do?method=loginTM#page10
 
 ### Stacks we use
