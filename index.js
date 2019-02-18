@@ -39,27 +39,47 @@ async function getTotalPageCount(page) {
     }
 }
 
-async function nextPage(page, currentPageNumber) {
+function nextPage(page, currentPageNumber) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            console.log('Next page...');
+            await page.waitForSelector('.board_pager03 strong', {visible: true});
+            await page.evaluate(() => {
+                const current = document.querySelector('.board_pager03 strong').textContent;
+                if (current % 10 === 0) {
+                    document.querySelector('.board_pager03 .next').click();
+                } else {
+                    console.log(current % 10);
+                    document.querySelectorAll('.board_pager03 a')[current % 10].click();
+                }
+            });
+            await page.waitForResponse(SEARCH_API_URL);
+            await page.waitFor(10000);
+            const pageNum = await await page.evaluate(() => document.querySelector('.board_pager03 strong').textContent);
+            console.log(`Expected page - ${currentPageNumber + 1} =======  Current selected page - ${pageNum}`);
+            resolve(pageNum);
+        } catch (e) {
+            console.log('ERROR: Clicking next page is failed. Error Detail - ', e);
+            reject(e);
+        }
+    });
+}
+
+async function goToSpecificPageBlock(page, pageNumber) {
     try {
-        console.log('Next page...');
         await page.waitForSelector('.board_pager03 strong', {visible: true});
-        await page.evaluate(() => {
-            const current = document.querySelector('.board_pager03 strong').textContent;
-            // if (current < 9) {
-            //     current = 9;
-            // }
-            if (current % 10 === 0) {
+        const pageBlock = parseInt(pageNumber / 10, 10);
+        for (let i = 1; i <= pageBlock; i++) {
+            await page.waitForSelector('.board_pager03 strong', {visible: true});
+            await page.evaluate(() => {
                 document.querySelector('.board_pager03 .next').click();
-            } else {
-                console.log(current % 10);
-                document.querySelectorAll('.board_pager03 a')[current % 10].click();
-            }
-        });
-        console.log(`Current selected page - ${currentPageNumber + 1}`);
-        await page.waitForResponse(SEARCH_API_URL);
-        await page.waitFor(10000);
+            });
+            await page.waitForResponse(SEARCH_API_URL);
+            await page.waitFor(1000);
+            console.log(`Skipping to page block ${pageBlock} - current page block - ${i * 10 + 1} - ${i * 10 + 10}`);
+        }
     } catch (e) {
-        console.log('ERROR: Clicking next page is failed. Error Detail - ', e);
+        console.log('ERROR: Failed to go to specific page. Error Detail - ', e);
     }
 }
 
@@ -72,6 +92,18 @@ async function savePageToPDF(page, currentPageNumber) {
     }
 }
 
+async function savePageToCSV(page, currentPageNumber) {
+    try {
+        await page.waitForSelector('.icon_exl', {visible: true});
+        await page.evaluate(() => {
+            document.querySelector('.icon_exl a').click();
+        });
+        console.log(`Page ${currentPageNumber} is saved as csv`);
+    } catch (e) {
+        console.log('ERROR: Saving page as CSV failed. Error Detail - ', e);
+    }
+}
+
 async function run() {
     // start browser
     const browser = await puppeteer.launch({headless: true, args: ['--start-fullscreen', '--window-size=1920,1040']});
@@ -81,10 +113,18 @@ async function run() {
 
     await startSearch(page);
     const totalPage = await getTotalPageCount(page);
+    // await goToSpecificPageBlock(page, 184);
+    // await savePageToPDF(page, 181);
     await savePageToPDF(page, 1);
     for (let i = 1; i < totalPage; i ++) {
-        await nextPage(page, i);
-        await savePageToPDF(page, i + 1);
+        const real_page = await nextPage(page, i);
+        if (parseInt(real_page, 10) === parseInt(i + 1, 10)) {
+            await savePageToPDF(page, real_page);
+            // await savePageToCSV(page, real_page);
+        } else {
+            i = real_page - 1;
+        }
+
     }
     browser.close();
 }
